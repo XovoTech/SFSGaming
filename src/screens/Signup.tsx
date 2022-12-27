@@ -17,6 +17,7 @@ import { AppThunkDispatch, RootState } from '../store/types';
 import { APP_LOGO } from '../constants/value';
 import auth from '@react-native-firebase/auth';
 import { authenticate } from '../store/actions/auth';
+import { getDeviceWidth } from '../helper/size';
 
 const Signup = () => {
 
@@ -49,7 +50,7 @@ const Signup = () => {
 
         try {
             const userCredentials = await auth().createUserWithEmailAndPassword(email, password);
-            await userCredentials.user.updateProfile({displayName: name});
+            await userCredentials.user.updateProfile({ displayName: name });
             dispatch(authenticate(userCredentials.user))
         } catch (e: any) {
             console.log(e);
@@ -63,7 +64,7 @@ const Signup = () => {
             <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={Keyboard.dismiss}>
                 <View style={styles.innerContainer}>
                     <View style={styles.logoContainer}>
-                        <Image source={APP_LOGO} />
+                        <Image source={APP_LOGO} style={styles.logoImage} />
                     </View>
                     <Text style={styles.signupHeading}>
                         Register
@@ -159,6 +160,10 @@ const useStyles = () => {
             justifyContent: 'center',
             alignItems: 'center',
         },
+        logoImage: {
+            width: getDeviceWidth() * 0.65,
+            height: getDeviceWidth() * 0.65,
+        },
         innerContainer: {
             width: "90%",
             marginBottom: theme.spacingFactor,
@@ -167,7 +172,6 @@ const useStyles = () => {
 
         },
         logoContainer: {
-            marginVertical: theme.spacingFactor * 5,
             alignItems: 'center',
             justifyContent: 'center',
         },
@@ -176,7 +180,6 @@ const useStyles = () => {
             fontSize: theme.fontSize.h1,
             fontFamily: theme.fontFamily.bold,
             color: theme.color.spider,
-            marginTop: theme.spacingFactor * 4,
             marginBottom: theme.spacingFactor * 2,
         },
         forgot: {

@@ -17,6 +17,7 @@ import { AppThunkDispatch, RootState } from '../store/types';
 import { APP_LOGO } from '../constants/value';
 import auth from '@react-native-firebase/auth';
 import { authenticate } from '../store/actions/auth';
+import { getDeviceWidth } from '../helper/size';
 
 const LoginScreen = () => {
 
@@ -25,7 +26,6 @@ const LoginScreen = () => {
   const loginButtonRef = useRef<IButtonRef>(null);
   const emailRef = useRef<IInputRef>(null);
   const passwordRef = useRef<IInputRef>(null);
-  const ForgotPassword = () => navigate('ForgotPassword');
   const dispatch = useDispatch<AppThunkDispatch>();
 
   const loginHandler = useCallback(async () => {
@@ -59,7 +59,7 @@ const LoginScreen = () => {
       <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
           <View style={styles.logoContainer}>
-            <Image source={APP_LOGO} />
+            <Image source={APP_LOGO} style={styles.logoImage}/>
           </View>
           <Text style={styles.signinHeading}>
             Sign In
@@ -92,9 +92,9 @@ const LoginScreen = () => {
             }}
             secureTextEntry={!showPassword}
           />
-          <TouchableOpacity activeOpacity={0.6} onPress={ForgotPassword}>
+          {/* <TouchableOpacity activeOpacity={0.6} onPress={ForgotPassword}>
             <Text style={[styles.subHeading, styles.forgot]}>Forgot password?</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <Button
             ref={loginButtonRef}
@@ -105,7 +105,7 @@ const LoginScreen = () => {
             Sign In
           </Button>
 
-          <Text style={styles.subHeading} onPress={() => navigate('OnBoardBasicInfo')}>
+          <Text style={styles.subHeading} onPress={() => navigate('Signup')}>
             Don't have an account ? <Text style={styles.signupLink}>Sign Up</Text>
           </Text>
         </View>
@@ -122,6 +122,10 @@ const useStyles = () => {
       flex: 1,
       backgroundColor: theme.background.color,
     },
+    logoImage: {
+      width: getDeviceWidth() * 0.65,
+      height: getDeviceWidth() * 0.65,
+    },
     backdrop: {
       justifyContent: 'center',
       alignItems: 'center',
@@ -134,7 +138,6 @@ const useStyles = () => {
 
     },
     logoContainer: {
-      marginVertical: theme.spacingFactor * 5,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -143,7 +146,6 @@ const useStyles = () => {
       fontSize: theme.fontSize.h1,
       fontFamily: theme.fontFamily.bold,
       color: theme.color.spider,
-      marginTop: theme.spacingFactor * 4,
       marginBottom: theme.spacingFactor * 2,
     },
     forgot: {

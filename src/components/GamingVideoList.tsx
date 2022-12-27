@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import React, { useMemo, useState, useEffect } from 'react';
-import { StyleSheet, View, FlatList, ListRenderItem, RefreshControl, ActivityIndicator, Text, StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, View, FlatList, ListRenderItem, RefreshControl, ActivityIndicator, Text, StyleProp, ViewStyle, Linking } from 'react-native';
 import { useSelector } from 'react-redux';
 import Input from './Input';
 import { SFS_GAMING_BPS } from '../constants/value';
@@ -114,9 +114,7 @@ const VideoListItem = React.memo<listPropTypes>((props) => {
         },
     })
 
-    const onOpen = () => {
-
-    }
+    const onOpen = () => Linking.openURL(props.collection.video)
 
     return (
         <View style={[styles.listContainer, props.style]}>

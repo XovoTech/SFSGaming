@@ -116,7 +116,7 @@ const useStyles = (props: propTypes) => {
       color: props.style?.color || theme.color.spider,
       textAlign: props.style?.textAlign || "left",
       fontFamily: props.style?.fontFamily || theme.fontFamily.bold,
-      fontSize: props.style?.fontSize || theme.fontSize.h3,
+      fontSize: props.style?.fontSize || theme.fontSize.h2,
       marginHorizontal: theme.spacingFactor,
       flex: 1,
     },

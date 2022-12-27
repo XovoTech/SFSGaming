@@ -7,12 +7,11 @@ import {
   View,
   Linking,
 } from 'react-native';
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { closeDrawer, drawerRef } from '../helper/drawer';
 import { useDispatch, useSelector } from 'react-redux';
 import DrawerLayout from 'react-native-gesture-handler/DrawerLayout';
 import DrawerProfile from './DrawerProfile';
-import { logout } from '../api/auth';
 import { moderateScale } from 'react-native-size-matters';
 import { navigate } from '../helper/navigator';
 import DeviceInfo from 'react-native-device-info';
@@ -20,8 +19,8 @@ import { IconTypes } from '../constants/enums';
 import Icon from './Icon';
 import { AppThunkDispatch, RootState } from '../store/types';
 import { IDrawerItem } from '../model/app';
-
-const drawerNavs: Array<IDrawerItem> = [];
+import auth from '@react-native-firebase/auth';
+import { authenticate } from '../store/actions/auth';
 
 const socialIconLinks = [
   {
@@ -46,18 +45,15 @@ const socialIconLinks = [
   },
 ]
 
+const drawerNavs: Array<IDrawerItem> = [];
+
 const CustomDrawerContent = React.memo(() => {
   const styles = useStyles();
   const dispatch = useDispatch<AppThunkDispatch>();
 
-  useEffect(() => {
-    // setActive(getActiveRouteName());
-  }, []);
-
   const onItemPress = (routeName: string) => {
     closeDrawer();
     navigate(routeName);
-    // setActive(getActiveRouteName());
   };
 
   const onLogout = () => {
@@ -72,14 +68,17 @@ const CustomDrawerContent = React.memo(() => {
         {
           text: 'Yes, log me out',
           onPress: async () => {
-            await dispatch(logout());
+            await auth().signOut();
             closeDrawer();
+            dispatch(authenticate(null));
           },
         },
       ],
       { cancelable: false },
     );
   };
+
+  const openXovoTech = () => Linking.openURL('https://xovotech.com/');
 
   return (
     <View style={styles.menu}>
@@ -114,6 +113,8 @@ const CustomDrawerContent = React.memo(() => {
           )
         })}
       </View>
+      <Text style={styles.collaborationText}>In Collaboration with</Text>
+      <Text style={[styles.collaborationText, styles.xovoText]} onPress={openXovoTech}>XovoTech</Text>
       <View style={styles.bottomContainer}>
         <TouchableOpacity
           activeOpacity={0.6}
@@ -171,6 +172,16 @@ const useStyles = () => {
       marginVertical: theme.spacingFactor / 4,
       borderRadius: theme.spacingFactor,
       backgroundColor: theme.color.grayBackground2,
+    },
+    collaborationText: {
+      color: theme.color.spider,
+      fontFamily: theme.fontFamily.regular,
+      fontSize: theme.fontSize.caption,
+      textAlign: 'center',
+    },
+    xovoText: {
+      fontSize : theme.fontSize.h5,
+      color: theme.color.primary,
     },
     menuIcon: {
       color: theme.color.gray1,

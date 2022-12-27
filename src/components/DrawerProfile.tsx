@@ -1,7 +1,5 @@
 import React, { useMemo } from 'react';
-// import { navigate } from '../helper/navigator';
 import { StyleSheet, TouchableOpacity, Text, View, StyleProp } from 'react-native';
-// import { closeDrawer } from '../helper/drawer';
 import { useSelector } from 'react-redux';
 import UserProfileAvatar from './profile/UserProfileAvatar';
 import { RootState } from '../store/types';
@@ -23,7 +21,7 @@ const DrawerProfile = React.memo<propTypes>((props) => {
         <TouchableOpacity activeOpacity={0.6} style={[styles.container, props.style]}>
             <UserProfileAvatar size={44} style={styles.avatarWrapper} />
             <View style={styles.rightSectionContainer}>
-                <Text numberOfLines={1} ellipsizeMode='tail' style={styles.userNameText}>{user?.displayName || user?.email || ""}</Text>
+                <Text numberOfLines={1} ellipsizeMode='tail' style={styles.userNameText}>{user?.displayName || "SFS Gamer"}</Text>
             </View>
         </TouchableOpacity>
     );
@@ -34,6 +32,7 @@ const useStyles = () => {
     return useMemo(() => StyleSheet.create({
         container: {
             flexDirection: "row",
+            width:'100%',
         },
         avatarWrapper: {
             alignItems: 'center',
