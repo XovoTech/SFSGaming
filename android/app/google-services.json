@@ -1,0 +1,40 @@
+{
+    "project_info": {
+      "project_number": "491877603273",
+      "firebase_url": "https://sfs-gaming-bp-e5362-default-rtdb.asia-southeast1.firebasedatabase.app",
+      "project_id": "sfs-gaming-bp-e5362",
+      "storage_bucket": "sfs-gaming-bp-e5362.appspot.com"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:491877603273:android:ca0920183f8d27ad037a18",
+          "android_client_info": {
+            "package_name": "com.uniqueapps.sfsgamingbp"
+          }
+        },
+        "oauth_client": [
+          {
+            "client_id": "491877603273-dhnft7aovm46em1a7e1q4m3um1afbaqh.apps.googleusercontent.com",
+            "client_type": 3
+          }
+        ],
+        "api_key": [
+          {
+            "current_key": "AIzaSyDCrJp61-xGNMyJ_YoJtMYIy16NaBwp_v8"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": [
+              {
+                "client_id": "491877603273-dhnft7aovm46em1a7e1q4m3um1afbaqh.apps.googleusercontent.com",
+                "client_type": 3
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }
