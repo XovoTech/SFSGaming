@@ -18,6 +18,9 @@ import { APP_LOGO } from '../constants/value';
 import auth from '@react-native-firebase/auth';
 import { authenticate } from '../store/actions/auth';
 import { getDeviceWidth } from '../helper/size';
+import { setToast } from '../store/actions/app';
+import { ToastTypes } from '../constants/enums';
+import Icon from '../components/Icon';
 
 const LoginScreen = () => {
 
@@ -46,20 +49,44 @@ const LoginScreen = () => {
       const userCredentials = await auth().signInWithEmailAndPassword(email, password);
       dispatch(authenticate(userCredentials.user))
     } catch (e: any) {
+
       if (e.code == 'auth/user-not-found') {
-        navigate('Signup', { email });
+        return navigate('Signup', { email });
       }
+
+      dispatch(setToast({
+        text: e.message || "Unable to Sign In",
+        type: ToastTypes.error,
+        title: "Error Signing In",
+      }));
     }
 
     loginButtonRef.current?.showLoader(false);
-  }, [ emailRef, passwordRef, dispatch]);
+  }, [emailRef, passwordRef, dispatch]);
+
+  const onSkipSignin = async () => {
+    try {
+      const userCredentials = await auth().signInAnonymously();
+      dispatch(authenticate(userCredentials.user));
+    } catch (e: any) {
+      dispatch(setToast({
+        title: "Error logging in",
+        text: e.message || "Unable to skip login",
+        type: ToastTypes.error,
+      }))
+    }
+  }
 
   return (
     <KeyboardAwareScrollView style={styles.screen}>
+      <TouchableOpacity activeOpacity={0.6} onPress={onSkipSignin} style={styles.skipWrapper}>
+        <Text style={styles.skipText}>Skip</Text>
+        <Icon name="chevron-right" style={styles.skipIcon} />
+      </TouchableOpacity>
       <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={Keyboard.dismiss}>
         <View style={styles.innerContainer}>
           <View style={styles.logoContainer}>
-            <Image source={APP_LOGO} style={styles.logoImage}/>
+            <Image source={APP_LOGO} style={styles.logoImage} />
           </View>
           <Text style={styles.signinHeading}>
             Sign In
@@ -121,6 +148,24 @@ const useStyles = () => {
     screen: {
       flex: 1,
       backgroundColor: theme.background.color,
+      position: 'relative',
+    },
+    skipWrapper: {
+      position: 'absolute',
+      top: theme.spacingFactor * 4,
+      right: theme.spacingFactor * 2,
+      flexDirection: 'row',
+      zIndex: 1,
+      alignItems: 'center',
+    },
+    skipText: {
+      color: theme.color.spider,
+      fontFamily: theme.fontFamily.medium,
+      fontSize: theme.fontSize.h5,
+    },
+    skipIcon: {
+      color: theme.color.spider,
+      fontSize: theme.fontSize.h4,
     },
     logoImage: {
       width: getDeviceWidth() * 0.65,
@@ -173,7 +218,7 @@ const useStyles = () => {
     },
     iconStyle: {
       color: theme.color.white,
-  },
+    },
   }), [theme])
 };
 
