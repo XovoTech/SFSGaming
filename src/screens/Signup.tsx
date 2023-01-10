@@ -18,6 +18,8 @@ import { APP_LOGO } from '../constants/value';
 import auth from '@react-native-firebase/auth';
 import { authenticate } from '../store/actions/auth';
 import { getDeviceWidth } from '../helper/size';
+import { setToast } from '../store/actions/app';
+import { ToastTypes } from '../constants/enums';
 
 const Signup = () => {
 
@@ -53,7 +55,11 @@ const Signup = () => {
             await userCredentials.user.updateProfile({ displayName: name });
             dispatch(authenticate(userCredentials.user))
         } catch (e: any) {
-            console.log(e);
+            dispatch(setToast({
+                text: e.message || "Unable to Sign In",
+                type: ToastTypes.error,
+                title: "Error Signing In",
+            }));
         }
 
         signupButtonRef.current?.showLoader(false);

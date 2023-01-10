@@ -20,7 +20,7 @@ type propTypes = {
   title?: string,
   renderCustomCenter?: React.ReactNode,
   style?: StyleProp<any>,
-  renderCustomRight?: (props: { style: StyleProp<any>}) => React.ReactNode,
+  renderCustomRight?: React.ReactNode | ((props: { style: StyleProp<any>}) => React.ReactNode),
   userProfileStyle?: StyleProp<any>,
   titleStyle?: StyleProp<any>,
 }
@@ -86,7 +86,7 @@ const Header = React.memo<propTypes>((props) => {
 
       {props.renderCustomRight ? (
         <View style={styles.leftView}>
-          {props.renderCustomRight({ style: styles.iconStyle })}
+          {typeof props.renderCustomRight == "function" ? props.renderCustomRight({ style: styles.iconStyle }) : props.renderCustomRight}
         </View>
       ) : null}
     </Animated.View>

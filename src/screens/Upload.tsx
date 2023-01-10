@@ -1,11 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Button from '../components/Button';
 import Header from '../components/Header';
 import Icon from '../components/Icon';
-import { IconTypes } from '../constants/enums';
-import { RootState } from '../store/types';
+import { IconTypes, ToastTypes } from '../constants/enums';
+import { AppThunkDispatch, RootState } from '../store/types';
 import ImagePicker, { Image as ImageResponse, Options } from 'react-native-image-crop-picker';
 import Input, { IInputRef } from '../components/Input';
 import { IBPSInfo } from '../model/bps';
@@ -17,6 +17,7 @@ import { BPS_KEY } from '../constants/value';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Image from '../components/Image';
 import { moderateScale } from 'react-native-size-matters';
+import { setToast } from '../store/actions/app';
 
 const rules = [
     'Name and Image must be appropriate and related to SFS.',
@@ -30,6 +31,7 @@ const Upload = () => {
     const user = useSelector((store: RootState) => store.auth.user);
     const titleRef = useRef<IInputRef>(null);
     const linkRef = useRef<IInputRef>(null);
+    const dispatch = useDispatch<AppThunkDispatch>();
     const [imageResponse, setImageResponse] = useState<ImageResponse>();
 
     const onBrowseImage = async () => {
@@ -59,7 +61,16 @@ const Upload = () => {
             bpLink: linkRef.current?.value(),
         }
 
-        await database().ref(BPS_KEY).child(key).set(data);
+        try {
+            await database().ref(BPS_KEY).child(key).set(data);
+        } catch (e: any) {
+            dispatch(setToast({
+                text: e.message || `Unable to Fetch data for key '${BPS_KEY}'`,
+                type: ToastTypes.error,
+                title: "Error Fetching data",
+            }));
+        }
+
     }
 
     return (
@@ -69,7 +80,7 @@ const Upload = () => {
                 <View style={styles.imageContainer}>
                     {
                         imageResponse ? (
-                            <Image style={styles.previewImage} source={{uri: imageResponse.path}} />
+                            <Image style={styles.previewImage} source={{ uri: imageResponse.path }} />
                         ) : (
                             <Icon style={styles.imageIcon} name="image-not-supported" type={IconTypes.MaterialIcons} />
                         )
@@ -109,18 +120,18 @@ const useStyles = () => {
 
     return useMemo(() => StyleSheet.create({
         screen: {
-            flex:1,
-            flexDirection:'column',
+            flex: 1,
+            flexDirection: 'column',
             backgroundColor: theme.background.color,
         },
         container: {
             flex: 1,
             padding: theme.spacingFactor,
-            justifyContent:'space-evenly',
+            justifyContent: 'space-evenly',
         },
         imageContainer: {
-            justifyContent:'center',
-            alignItems:'center',
+            justifyContent: 'center',
+            alignItems: 'center',
             marginVertical: theme.spacingFactor,
         },
         imageIcon: {

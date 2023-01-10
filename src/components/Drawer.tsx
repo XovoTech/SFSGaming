@@ -15,12 +15,13 @@ import DrawerProfile from './DrawerProfile';
 import { moderateScale } from 'react-native-size-matters';
 import { navigate } from '../helper/navigator';
 import DeviceInfo from 'react-native-device-info';
-import { IconTypes } from '../constants/enums';
+import { IconTypes, ToastTypes } from '../constants/enums';
 import Icon from './Icon';
 import { AppThunkDispatch, RootState } from '../store/types';
 import { IDrawerItem } from '../model/app';
 import auth from '@react-native-firebase/auth';
 import { authenticate } from '../store/actions/auth';
+import { setToast } from '../store/actions/app';
 
 const socialIconLinks = [
   {
@@ -68,7 +69,15 @@ const CustomDrawerContent = React.memo(() => {
         {
           text: 'Yes, log me out',
           onPress: async () => {
-            await auth().signOut();
+            try {
+              await auth().signOut();
+            } catch (e: any) {
+              dispatch(setToast({
+                text: e.message || "Unable to Sign Out",
+                type: ToastTypes.error,
+                title: "Error Signing Out",
+              }));
+            }
             closeDrawer();
             dispatch(authenticate(null));
           },
@@ -108,8 +117,8 @@ const CustomDrawerContent = React.memo(() => {
               key={social.icon}
               onPress={onPress}
               style={styles.menuTouchArea}>
-                <Icon name={social.icon} style={[styles.socialIcon, {color: social.color}]}/>
-              </TouchableOpacity>
+              <Icon name={social.icon} style={[styles.socialIcon, { color: social.color }]} />
+            </TouchableOpacity>
           )
         })}
       </View>
@@ -180,7 +189,7 @@ const useStyles = () => {
       textAlign: 'center',
     },
     xovoText: {
-      fontSize : theme.fontSize.h5,
+      fontSize: theme.fontSize.h5,
       color: theme.color.primary,
     },
     menuIcon: {
@@ -199,8 +208,8 @@ const useStyles = () => {
     },
     socialIconContainer: {
       flexDirection: 'row',
-      justifyContent:'space-around',
-      alignItems:'center',
+      justifyContent: 'space-around',
+      alignItems: 'center',
       marginBottom: theme.spacingFactor,
       paddingBottom: theme.spacingFactor,
       bottomBottomWidth: 1,

@@ -9,7 +9,6 @@ import { IYoutubeVideo } from '../model/bps';
 import { AppThunkDispatch, RootState } from '../store/types';
 import Image from './Image';
 import SkeletonSearch from './skeletons/SkeletonSearch';
-// import YouTubeJSON from './youtube.json';
 
 const YoutubeVideoList = () => {
 
@@ -31,7 +30,6 @@ const YoutubeVideoList = () => {
             }
             const response = await dispatch(dispatchAPI(params));
             return response.items;
-            // return YouTubeJSON;
         },
     })
 

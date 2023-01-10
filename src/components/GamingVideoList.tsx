@@ -1,17 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, View, FlatList, ListRenderItem, RefreshControl, ActivityIndicator, Text, StyleProp, ViewStyle, Linking } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Input from './Input';
-import { SFS_GAMING_BPS } from '../constants/value';
-import { RootState } from '../store/types';
+import { BLUE_PRINT_FILENAME, SFS_GAMING_BPS } from '../constants/value';
+import { AppThunkDispatch, RootState } from '../store/types';
 import database from '@react-native-firebase/database';
 import { IGamingBPS } from '../model/bps';
 import SkeletonSearch from './skeletons/SkeletonSearch';
 import storage from '@react-native-firebase/storage';
-import Button from './Button';
+import Button, { IButtonRef } from './Button';
 import Image from './Image';
-
+import { DownloadFileOptions, DocumentDirectoryPath, downloadFile, exists, mkdir } from 'react-native-fs';
+import { setToast } from '../store/actions/app';
+import { ToastTypes } from '../constants/enums';
+import { navigate } from '../helper/navigator';
 
 type propTypes = {
     style?: StyleProp<any>,
@@ -22,7 +25,7 @@ const GamingVideoList = React.memo<propTypes>((props) => {
     const [searchInput, setSearchText] = useState<string>("");
     const theme = useSelector((store: RootState) => store.theme);
 
-    const [data, setData] = useState<{[key in string]: IGamingBPS}>({});
+    const [data, setData] = useState<{ [key in string]: IGamingBPS }>({});
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
@@ -42,7 +45,7 @@ const GamingVideoList = React.memo<propTypes>((props) => {
         else
             return (
                 <View style={styles.noResultWrapper}>
-                    <Text style={styles.noResultText}>{searchInput ? `No video found for "${searchInput}"` :  "No Video found!"}</Text>
+                    <Text style={styles.noResultText}>{searchInput ? `No video found for "${searchInput}"` : "No Video found!"}</Text>
                 </View>
             )
     }, [styles, isLoading, searchInput]);
@@ -108,13 +111,64 @@ type listPropTypes = {
 const VideoListItem = React.memo<listPropTypes>((props) => {
     const styles = useStyles();
     const theme = useSelector((store: RootState) => store.theme);
+    const downloadBtnRef = useRef<IButtonRef>(null);
+    const dispatch = useDispatch<AppThunkDispatch>();
+    const [fileExist, setFileExist] = useState<boolean>(false);
+
     const { data: image_uri, isLoading } = useQuery({
         queryKey: [SFS_GAMING_BPS, props.collection.key, props.collection.image], queryFn: async () => {
             return await storage().ref(SFS_GAMING_BPS).child(props.collection.key).child(props.collection.image).getDownloadURL();
         },
-    })
+    });
 
-    const onOpen = () => Linking.openURL(props.collection.video)
+    const onWatch = () => Linking.openURL(props.collection.video);
+
+    const onOpen = async () => {
+        const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key, BLUE_PRINT_FILENAME].join('/');
+        if (await exists(path)) {
+            navigate("Edit", { path, key: props.collection.key });
+        }
+    }
+
+    const checkForLocalFile = useCallback(async () => {
+        const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key, BLUE_PRINT_FILENAME].join('/');
+        const f = await exists(path);
+        setFileExist(f);
+    }, [props.collection.key]);
+
+    useEffect(() => {
+        checkForLocalFile();
+    }, [checkForLocalFile])
+
+    const onDownload = async () => {
+        downloadBtnRef.current?.showLoader(true);
+        const fromUrl = await storage().ref(SFS_GAMING_BPS).child(props.collection.key).child(BLUE_PRINT_FILENAME).getDownloadURL();
+        const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key];
+
+        for (let i = 0; i < path.length; i++) {
+            const p = path.slice(0, i + 1).join('/');
+            if (!(await exists(p))) {
+                await mkdir(p);
+            }
+        }
+
+        const downloadOptions: DownloadFileOptions = {
+            fromUrl,
+            toFile: [...path, BLUE_PRINT_FILENAME].join('/'),
+        }
+        const { promise } = downloadFile(downloadOptions);
+        try {
+            console.log(await promise);
+        } catch (e: any) {
+            dispatch(setToast({
+                text: e.message || "Unable to download",
+                type: ToastTypes.error,
+                title: "Error downloading",
+            }));
+        }
+        downloadBtnRef.current?.showLoader(false);
+        checkForLocalFile();
+    }
 
     return (
         <View style={[styles.listContainer, props.style]}>
@@ -129,8 +183,14 @@ const VideoListItem = React.memo<listPropTypes>((props) => {
             </View>
             <View style={styles.metaContentContainer}>
                 <Text style={styles.titleText}>{props.collection.name}</Text>
-                <Button onPress={onOpen}>WATCH VIDEO</Button>
-                <Button onPress={onOpen}>DOWNLOAD</Button>
+                <Button onPress={onWatch}>WATCH VIDEO</Button>
+                {
+                    fileExist ? (
+                        <Button onPress={onOpen}>OPEN</Button>
+                    ) : (
+                        <Button ref={downloadBtnRef} onPress={onDownload}>DOWNLOAD</Button>
+                    )
+                }
             </View>
         </View>
     )
@@ -151,8 +211,8 @@ const useStyles = () => {
         },
         noResultWrapper: {
             height: "100%",
-            justifyContent:'center',
-            alignItems:'center',
+            justifyContent: 'center',
+            alignItems: 'center',
         },
         noResultText: {
             color: theme.color.spider,
