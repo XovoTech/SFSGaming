@@ -21,7 +21,7 @@ type propTypes = {
 }
 
 export interface IModalRef {
-
+    showModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AppModal = React.forwardRef<IModalRef, React.PropsWithChildren<propTypes>>((props, ref) => {
@@ -83,8 +83,6 @@ const useStyles = () => {
             backgroundColor:theme.type == "Light" ? theme.background.color : theme.color.grayBackground3,
             // flex: 0.6,
             paddingHorizontal: theme.spacingFactor * 2,
-            borderTopLeftRadius: theme.spacingFactor * 3,
-            borderTopRightRadius: theme.spacingFactor * 3,
             justifyContent: 'space-around',
         },
     }), [theme])

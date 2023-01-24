@@ -6,10 +6,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import Button, { IButtonRef } from '../components/Button';
 import Header from '../components/Header';
 import { AppThunkDispatch, RootState } from '../store/types';
-// import storage from '@react-native-firebase/storage';
-// import { BLUE_PRINT_FILENAME, SFS_GAMING_BPS } from '../constants/value';
 import { setToast } from '../store/actions/app';
 import { ToastTypes } from '../constants/enums';
+import EditModalTutorial from '../components/EditTutorialModal';
 
 const Edit = () => {
     const [height, setHeight] = useState<number>();
@@ -61,7 +60,10 @@ const Edit = () => {
         };
 
         return (
-            <Button ref={saveBtnRef} onPress={onSave}>Save</Button>
+            <React.Fragment>
+                <EditModalTutorial />
+                <Button ref={saveBtnRef} onPress={onSave}>Save</Button>
+            </React.Fragment>
         )
     }, [content, dispatch, params])
 

@@ -14,8 +14,8 @@ import Signup from '../screens/Signup';
 import Edit from '../screens/Edit';
 import Upload from '../screens/Upload';
 import GamingList from '../screens/GamingList';
+import EditList from '../screens/EditList';
 import { StyleSheet } from 'react-native';
-
 
 type KeyRoute = {
   [key in string]: React.NamedExoticComponent | ((props: any) => JSX.Element)
@@ -26,6 +26,7 @@ const routes: KeyRoute = {
   "Edit": Edit,
   "Upload": Upload,
   "Gaming": GamingList,
+  "EditList": EditList,
 }
 
 const MainStack = createNativeStackNavigator();
@@ -39,12 +40,12 @@ const tabNavs: Array<INavItem> = [
     label: "Sharing",
     icons: ["magnify", "magnify"],
   },
-  // {
-  //   id: 2,
-  //   key: "Edit",
-  //   label: "Edit",
-  //   icons: ["pencil", "pencil-outline"],
-  // },
+  {
+    id: 2,
+    key: "EditList",
+    label: "Edit List",
+    icons: ["pencil", "pencil-outline"],
+  },
   {
     id: 3,
     key: "Upload",
@@ -86,6 +87,7 @@ const MainTabs = React.memo(() => {
         <Tab.Screen
           key={tab.key}
           name={tab.label}
+          navigationKey={tab.key}
           component={routes[tab.key]}
           options={{
             tabBarIcon: focused => focused ? tab.icons[0] : tab.icons[1],
@@ -117,8 +119,6 @@ const AppNavigator = React.memo(() => {
         gestureDirection: "horizontal",
         gestureEnabled: true,
         animation: 'slide_from_right',
-        // cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-        // ...TransitionPresets.SlideFromRightIOS,
       }}
     >
       {filteredRoutes.map(key => (
@@ -139,11 +139,6 @@ export default () => {
     return {
       "Login": Login,
       "Signup": Signup,
-      // "ActivationSuccess": ActivationSuccess,
-      // "PasswordUpdated": PasswordUpdated,
-      // "EmailCheck": EmailCheck,
-      // "ActivateAccount": ActivateAccount,
-      // "ForgotPassword": ForgotPassword,
     }
   }, [])
 
@@ -159,8 +154,6 @@ export default () => {
           gestureDirection: "horizontal",
           gestureEnabled: true,
           animation: 'slide_from_right',
-          // detachPreviousScreen: false,
-          // ...TransitionPresets.SlideFromRightIOS,
         }}
       >
         {user?.uid ? (

@@ -20,6 +20,7 @@ type propTypes = {
   tabItemStyle?: StyleProp<ViewStyle>,
   tabLabelWrapperStyle?: StyleProp<any>,
   iconKey?: boolean,
+  iconType?: Array<IconTypes>,
 }
 
 export interface ITabRef {
@@ -87,7 +88,7 @@ const Tab = React.forwardRef<ITabRef, propTypes>((props, ref) => {
                 onPress={() => onIndexChange(i, index)} >
                 {
                   props.iconKey ? (
-                    <Icon name={route.key} type={IconTypes.MaterialIcons} style={styles.iconTitle}/>
+                    <Icon name={route.key} type={props.iconType?.[i] || IconTypes.MaterialIcons} style={styles.iconTitle}/>
                   ) : (
                     <ReAnimated.Text
                       numberOfLines={1}
