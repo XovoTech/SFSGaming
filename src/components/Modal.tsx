@@ -77,12 +77,10 @@ const useStyles = () => {
         backdropTouch: {
             width:"100%",
             height: "100%",
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
         },
         modalInnerContainer: {
             backgroundColor:theme.type == "Light" ? theme.background.color : theme.color.grayBackground3,
-            // flex: 0.6,
-            paddingHorizontal: theme.spacingFactor * 2,
             justifyContent: 'space-around',
         },
     }), [theme])
