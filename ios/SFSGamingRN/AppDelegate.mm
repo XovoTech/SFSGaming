@@ -36,7 +36,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   [FIRApp configure];
-  [RNSplashScreen show];
+//  [RNSplashScreen show];
 
   RCTAppSetupPrepareApp(application);
 
