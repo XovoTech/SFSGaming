@@ -14,7 +14,7 @@ import Image from './Image';
 import { DownloadFileOptions, DocumentDirectoryPath, downloadFile, exists, mkdir } from 'react-native-fs';
 import { setToast } from '../store/actions/app';
 import { ToastTypes } from '../constants/enums';
-import { navigate } from '../helper/navigator';
+// import { navigate } from '../helper/navigator';
 
 type propTypes = {
     style?: StyleProp<any>,
@@ -124,10 +124,10 @@ const VideoListItem = React.memo<listPropTypes>((props) => {
     const onWatch = () => Linking.openURL(props.collection.video);
 
     const onOpen = async () => {
-        const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key, BLUE_PRINT_FILENAME].join('/');
-        if (await exists(path)) {
-            navigate("Edit", { path, key: props.collection.key });
-        }
+        // const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key, BLUE_PRINT_FILENAME].join('/');
+        // if (await exists(path)) {
+        //     navigate("Edit", { path, key: props.collection.key });
+        // }
     }
 
     const checkForLocalFile = useCallback(async () => {

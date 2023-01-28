@@ -1,15 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, FlatList, ListRenderItem, RefreshControl, ActivityIndicator, Text, StyleProp, ViewStyle, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 import Input from './Input';
 import { SFS_GAMING_BPS } from '../constants/value';
 import { RootState } from '../store/types';
 import SkeletonSearch from './skeletons/SkeletonSearch';
-import storage from '@react-native-firebase/storage';
 import { IconTypes } from '../constants/enums';
 import Icon from './Icon';
 import { navigate } from '../helper/navigator';
+import RNFS from 'react-native-fs'
+import { getBlueprintDirPath } from '../helper/utility';
+import { PermissionsAndroid, Platform } from 'react-native';
 
 type propTypes = {
     style?: StyleProp<any>,
@@ -20,9 +22,24 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
     const [searchInput, setSearchText] = useState<string>("");
     const theme = useSelector((store: RootState) => store.theme);
 
+    useEffect(() => {
+        if (Platform.OS == 'android') {
+            const permissions = [
+                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+                PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+                PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
+            ]
+            PermissionsAndroid.requestMultiple(permissions);
+        }
+    });
+
     const { data, isLoading } = useQuery({
         queryKey: [SFS_GAMING_BPS], queryFn: async () => {
-            return (await storage().ref(SFS_GAMING_BPS).listAll()).prefixes.map(v => v.fullPath)
+            const path = await getBlueprintDirPath();
+            const dirs = await RNFS.readDir(path);
+            return dirs.map(dir => dir.name);
         },
     });
 
@@ -43,7 +60,7 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
 
     const renderItem: ListRenderItem<any> = ({ item }) => {
         return (
-            <EditBlueprintItem path={item} />
+            <EditBlueprintItem name={item} />
         )
     }
 
@@ -91,41 +108,20 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
 
 type listPropTypes = {
     style?: StyleProp<ViewStyle>;
-    path: string
+    name: string
 }
 
-const EditBlueprintItem = React.memo<listPropTypes>(({path, style}) => {
+const EditBlueprintItem = React.memo<listPropTypes>(({ name, style }) => {
     const styles = useStyles();
-    const theme = useSelector((store: RootState) => store.theme);
-
-    const { data, isLoading } = useQuery({
-        queryKey:[ path ], queryFn: async () => {
-            const [blueprintLocation, simulatorImage, versionLocation] = (await storage().ref().child(path).listAll()).items;
-
-            return {
-                blueprintLocation,
-                simulatorImage,
-                versionLocation,
-            }
-        },
-    });
 
     const onEditBlueprint = async () => {
-        navigate("Edit", { path });
-    }
-
-    if (isLoading) {
-        return (
-            <View style={[styles.container, style]}>
-                <ActivityIndicator size="small" color={theme.color.primary} />
-            </View>
-        )
+        navigate("Edit", { name });
     }
 
     return (
         <TouchableOpacity activeOpacity={0.6} onPress={onEditBlueprint} style={[styles.listContainer, style]}>
             <Icon name="file-text" type={IconTypes.Feather} style={styles.fileIcon} />
-            <Text style={styles.blueprintText}>{data?.blueprintLocation?.toString() || ""}</Text>
+            <Text style={styles.blueprintText}>{name}</Text>
         </TouchableOpacity>
     )
 })
