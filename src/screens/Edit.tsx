@@ -1,17 +1,17 @@
 import { useRoute } from '@react-navigation/native';
 import React, { useMemo, useState, useRef } from 'react';
 import { LayoutChangeEvent, StyleSheet, TextInput, View, ScrollView, ActivityIndicator } from 'react-native';
-import { writeFile } from 'react-native-fs';
+import { writeFile, readFile } from 'react-native-fs';
 import { useDispatch, useSelector } from 'react-redux';
 import Button, { IButtonRef } from '../components/Button';
 import Header from '../components/Header';
 import { AppThunkDispatch, RootState } from '../store/types';
 import { setToast } from '../store/actions/app';
-import { ToastTypes } from '../constants/enums';
+import { EditType, ToastTypes } from '../constants/enums';
 import EditModalTutorial from '../components/EditTutorialModal';
 import { useQuery } from '@tanstack/react-query';
-import { getBlueprintDirPath } from '../helper/utility';
-import RNFS from 'react-native-fs';
+import { getBlueprintDirPath, getPlanetDirPath } from '../helper/utility';
+import { BLUE_PRINT_FILENAME } from '../constants/value';
 
 const Edit = () => {
     const [height, setHeight] = useState<number>();
@@ -25,9 +25,16 @@ const Edit = () => {
     const { data: content, isLoading } = useQuery({
         queryKey: [params.name], queryFn: async () => {
             if (params.name) {
-                const path = await getBlueprintDirPath();
-                const fileContent = await RNFS.readFile(`${path}/${params.name}/Blueprint.txt`, 'utf8');
-                return fileContent;
+                if (params.type == EditType.Blueprint) {
+                    const path = await getBlueprintDirPath();
+                    const fileContent = await readFile(`${path}/${params.name}/${BLUE_PRINT_FILENAME}`, 'utf8');
+                    return fileContent;
+                }
+                if (params.type == EditType.Planet) {
+                    const path = await getPlanetDirPath();
+                    const fileContent = await readFile(`${path}/${params.name}`, 'utf8');
+                    return fileContent;
+                }
             }
             return "";
         },
@@ -42,11 +49,16 @@ const Edit = () => {
         const onSave = async () => {
             saveBtnRef.current?.showLoader(true);
             try {
-                // await storage().ref(SFS_GAMING_BPS).child(key).child(BLUE_PRINT_FILENAME).putString(content);
 
                 if (params.name) {
-                    const path = await getBlueprintDirPath();
-                    await writeFile(`${path}/${params.name}/Blueprint.txt`, editedContent || content || "");
+                    if (params.type == EditType.Blueprint) {
+                        const path = await getBlueprintDirPath();
+                        await writeFile(`${path}/${params.name}/${BLUE_PRINT_FILENAME}`, editedContent || content || "");
+                    }
+                    if (params.type == EditType.Planet) {
+                        const path = await getPlanetDirPath();
+                        await writeFile(`${path}/${params.name}`, 'utf8');
+                    }
                     dispatch(setToast({
                         title: "Success",
                         type: ToastTypes.success,

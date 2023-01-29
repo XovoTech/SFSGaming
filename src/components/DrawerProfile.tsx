@@ -12,11 +12,6 @@ const DrawerProfile = React.memo<propTypes>((props) => {
     const styles = useStyles();
     const user = useSelector((store: RootState) => store.auth.user);
 
-    // const onNavigateToProfile = useCallback(async () => {
-    //     closeDrawer();
-    //     navigate("Profile")
-    // }, [])
-
     return (
         <TouchableOpacity activeOpacity={0.6} style={[styles.container, props.style]}>
             <UserProfileAvatar size={44} style={styles.avatarWrapper} />

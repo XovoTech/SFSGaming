@@ -29,3 +29,8 @@ export enum IconTypes {
     SimpleLineIcons = "SimpleLineIcons",
     Zocial = "Zocial",
 }
+
+export enum EditType {
+    Planet,
+    Blueprint,
+}

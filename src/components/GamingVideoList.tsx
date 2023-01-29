@@ -11,10 +11,11 @@ import SkeletonSearch from './skeletons/SkeletonSearch';
 import storage from '@react-native-firebase/storage';
 import Button, { IButtonRef } from './Button';
 import Image from './Image';
-import { DownloadFileOptions, DocumentDirectoryPath, downloadFile, exists, mkdir } from 'react-native-fs';
+import { DownloadFileOptions, downloadFile, exists, mkdir } from 'react-native-fs';
 import { setToast } from '../store/actions/app';
-import { ToastTypes } from '../constants/enums';
-// import { navigate } from '../helper/navigator';
+import { EditType, ToastTypes } from '../constants/enums';
+import { getBlueprintDirPath } from '../helper/utility';
+import { navigate } from '../helper/navigator';
 
 type propTypes = {
     style?: StyleProp<any>,
@@ -124,15 +125,12 @@ const VideoListItem = React.memo<listPropTypes>((props) => {
     const onWatch = () => Linking.openURL(props.collection.video);
 
     const onOpen = async () => {
-        // const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key, BLUE_PRINT_FILENAME].join('/');
-        // if (await exists(path)) {
-        //     navigate("Edit", { path, key: props.collection.key });
-        // }
+        navigate("Edit", { name: props.collection.key, type: EditType.Blueprint});
     }
 
     const checkForLocalFile = useCallback(async () => {
-        const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key, BLUE_PRINT_FILENAME].join('/');
-        const f = await exists(path);
+        const path = await getBlueprintDirPath();
+        const f = await exists(`${path}/${props.collection.key}/${BLUE_PRINT_FILENAME}`);
         setFileExist(f);
     }, [props.collection.key]);
 
@@ -143,7 +141,15 @@ const VideoListItem = React.memo<listPropTypes>((props) => {
     const onDownload = async () => {
         downloadBtnRef.current?.showLoader(true);
         const fromUrl = await storage().ref(SFS_GAMING_BPS).child(props.collection.key).child(BLUE_PRINT_FILENAME).getDownloadURL();
-        const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key];
+        const dirPath = await getBlueprintDirPath();
+
+        if (!await exists(dirPath)) return dispatch(setToast({
+            text: "No Game file found",
+            title: "Error",
+            type: ToastTypes.error,
+        }))
+
+        const path = [dirPath, props.collection.key];
 
         for (let i = 0; i < path.length; i++) {
             const p = path.slice(0, i + 1).join('/');

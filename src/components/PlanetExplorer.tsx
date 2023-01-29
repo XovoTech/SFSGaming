@@ -1,39 +1,44 @@
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, FlatList, ListRenderItem, RefreshControl, ActivityIndicator, Text, StyleProp, ViewStyle, Linking } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View, FlatList, ListRenderItem, RefreshControl, ActivityIndicator, Text, StyleProp, ViewStyle, TouchableOpacity } from 'react-native';
+import { useSelector } from 'react-redux';
 import Input from './Input';
-import { BLUE_PRINT_FILENAME, SFS_GAMING_BPS } from '../constants/value';
-import { AppThunkDispatch, RootState } from '../store/types';
-import database from '@react-native-firebase/database';
-import { IGamingBPS } from '../model/bps';
+import { SFS_PLANET_LIST } from '../constants/value';
+import { RootState } from '../store/types';
 import SkeletonSearch from './skeletons/SkeletonSearch';
-import storage from '@react-native-firebase/storage';
-import Button, { IButtonRef } from './Button';
-import Image from './Image';
-import { DownloadFileOptions, DocumentDirectoryPath, downloadFile, exists, mkdir } from 'react-native-fs';
-import { setToast } from '../store/actions/app';
-import { ToastTypes } from '../constants/enums';
-// import { navigate } from '../helper/navigator';
+import { EditType, IconTypes } from '../constants/enums';
+import Icon from './Icon';
+import { navigate } from '../helper/navigator';
+import RNFS from 'react-native-fs'
+import { getPlanetDirPath } from '../helper/utility';
+import { PermissionsAndroid, Platform } from 'react-native';
 
 type propTypes = {
     style?: StyleProp<any>,
 }
 
-const EditBlueprintList = React.memo<propTypes>((props) => {
+const PlanetExplorer = React.memo<propTypes>((props) => {
     const styles = useStyles();
     const [searchInput, setSearchText] = useState<string>("");
     const theme = useSelector((store: RootState) => store.theme);
 
-    const [data, setData] = useState<{ [key in string]: IGamingBPS }>({});
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-
     useEffect(() => {
-        database().ref(SFS_GAMING_BPS).on('value', (snapshot) => {
-            setData(snapshot.val());
-            setIsLoading(false);
-        })
-    }, [])
+        if (Platform.OS == 'android') {
+            const permissions = [
+                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            ]
+            PermissionsAndroid.requestMultiple(permissions);
+        }
+    });
+
+    const { data, isLoading } = useQuery({
+        queryKey: [SFS_PLANET_LIST], queryFn: async () => {
+            const path = await getPlanetDirPath();
+            const dirs = await RNFS.readDir(path);
+            return dirs.map(dir => dir.name);
+        },
+    });
 
     const renderListEmptyComponent = useMemo(() => {
         if (isLoading)
@@ -50,15 +55,15 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
             )
     }, [styles, isLoading, searchInput]);
 
-    const filterItem = (item: IGamingBPS) => {
-        if (!searchInput) return true;
-        return item.name.toLowerCase().includes(searchInput.toLowerCase());
+    const renderItem: ListRenderItem<any> = ({ item }) => {
+        return (
+            <PlanetItem name={item} />
+        )
     }
 
-    const renderItem: ListRenderItem<IGamingBPS> = ({ item }) => {
-        return (
-            <VideoListItem collection={item} />
-        )
+    const filterItem = (item: string) => {
+        if (!searchInput) return true;
+        return item.toLowerCase().includes(searchInput.toLowerCase());
     }
 
     return (
@@ -73,10 +78,10 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
                 leftIcon={{ name: 'magnify' }}
             />
             <FlatList
-                data={Object.values(data || {}).filter(filterItem)}
+                data={data?.filter(filterItem) || []}
                 renderItem={renderItem}
                 style={styles.flatList}
-                keyExtractor={(item: IGamingBPS) => `${item.key}`}
+                keyExtractor={(item, i) => `${i}`}
                 initialNumToRender={8}
                 removeClippedSubviews={true}
                 maxToRenderPerBatch={100}
@@ -105,94 +110,21 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
 
 type listPropTypes = {
     style?: StyleProp<ViewStyle>;
-    collection: IGamingBPS
+    name: string
 }
 
-const VideoListItem = React.memo<listPropTypes>((props) => {
+const PlanetItem = React.memo<listPropTypes>(({ name, style }) => {
     const styles = useStyles();
-    const theme = useSelector((store: RootState) => store.theme);
-    const downloadBtnRef = useRef<IButtonRef>(null);
-    const dispatch = useDispatch<AppThunkDispatch>();
-    const [fileExist, setFileExist] = useState<boolean>(false);
 
-    const { data: image_uri, isLoading } = useQuery({
-        queryKey: [SFS_GAMING_BPS, props.collection.key, props.collection.image], queryFn: async () => {
-            return await storage().ref(SFS_GAMING_BPS).child(props.collection.key).child(props.collection.image).getDownloadURL();
-        },
-    });
-
-    const onWatch = () => Linking.openURL(props.collection.video);
-
-    const onOpen = async () => {
-        // const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key, BLUE_PRINT_FILENAME].join('/');
-        // if (await exists(path)) {
-        //     navigate("Edit", { path, key: props.collection.key });
-        // }
-    }
-
-    const checkForLocalFile = useCallback(async () => {
-        const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key, BLUE_PRINT_FILENAME].join('/');
-        const f = await exists(path);
-        setFileExist(f);
-    }, [props.collection.key]);
-
-    useEffect(() => {
-        checkForLocalFile();
-    }, [checkForLocalFile])
-
-    const onDownload = async () => {
-        downloadBtnRef.current?.showLoader(true);
-        const fromUrl = await storage().ref(SFS_GAMING_BPS).child(props.collection.key).child(BLUE_PRINT_FILENAME).getDownloadURL();
-        const path = [DocumentDirectoryPath, SFS_GAMING_BPS, props.collection.key];
-
-        for (let i = 0; i < path.length; i++) {
-            const p = path.slice(0, i + 1).join('/');
-            if (!(await exists(p))) {
-                await mkdir(p);
-            }
-        }
-
-        const downloadOptions: DownloadFileOptions = {
-            fromUrl,
-            toFile: [...path, BLUE_PRINT_FILENAME].join('/'),
-        }
-        const { promise } = downloadFile(downloadOptions);
-        try {
-            console.log(await promise);
-        } catch (e: any) {
-            dispatch(setToast({
-                text: e.message || "Unable to download",
-                type: ToastTypes.error,
-                title: "Error downloading",
-            }));
-        }
-        downloadBtnRef.current?.showLoader(false);
-        checkForLocalFile();
+    const onEditPlanet = async () => {
+        navigate("Edit", { name, type: EditType.Planet });
     }
 
     return (
-        <View style={[styles.listContainer, props.style]}>
-            <View style={styles.collectionImage}>
-                {
-                    isLoading ? (
-                        <ActivityIndicator color={theme.color.primary} size="large" />
-                    ) : (
-                        <Image source={{ uri: image_uri }} />
-                    )
-                }
-            </View>
-            <View style={styles.metaContentContainer}>
-                <Text style={styles.titleText}>{props.collection.name}</Text>
-                <Button onPress={onWatch}>WATCH VIDEO</Button>
-                {
-                    fileExist ? (
-                        <Button onPress={onOpen}>OPEN</Button>
-                    ) : (
-                        <Button ref={downloadBtnRef} onPress={onDownload}>DOWNLOAD</Button>
-                    )
-                }
-            </View>
-        </View>
+        <TouchableOpacity activeOpacity={0.6} onPress={onEditPlanet} style={[styles.listContainer, style]}>
+            <Icon name="file-text" type={IconTypes.Feather} style={styles.fileIcon} />
+            <Text style={styles.blueprintText}>{name.replace('.txt', '')}</Text>
+        </TouchableOpacity>
     )
 })
 
@@ -226,20 +158,23 @@ const useStyles = () => {
             flex: 1,
             flexDirection: 'row',
             justifyContent: 'space-between',
+            alignItems: 'center',
             padding: theme.spacingFactor,
             marginHorizontal: theme.spacingFactor * 1.5,
             marginVertical: theme.spacingFactor,
             borderRadius: theme.spacingFactor,
             backgroundColor: theme.color.grayBackground2,
         },
-        collectionImage: {
-            flex: 0.3,
-            marginRight: theme.spacingFactor,
+        fileIcon: {
+            fontSize: theme.fontSize.h2,
+            color: theme.color.white,
             alignItems: 'center',
             justifyContent: 'center',
+            margin: theme.spacingFactor,
         },
-        metaContentContainer: {
-            flex: 0.7,
+        blueprintText: {
+            flex: 1,
+            color: theme.color.white,
         },
         titleText: {
             fontFamily: theme.fontFamily.medium,
@@ -249,4 +184,4 @@ const useStyles = () => {
     }), [theme])
 }
 
-export default EditBlueprintList;
+export default PlanetExplorer;

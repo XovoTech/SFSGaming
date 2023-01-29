@@ -6,7 +6,7 @@ import Input from './Input';
 import { SFS_GAMING_BPS } from '../constants/value';
 import { RootState } from '../store/types';
 import SkeletonSearch from './skeletons/SkeletonSearch';
-import { IconTypes } from '../constants/enums';
+import { EditType, IconTypes } from '../constants/enums';
 import Icon from './Icon';
 import { navigate } from '../helper/navigator';
 import RNFS from 'react-native-fs'
@@ -27,9 +27,6 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
             const permissions = [
                 PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
                 PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-                PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-                PermissionsAndroid.PERMISSIONS.READ_MEDIA_AUDIO,
             ]
             PermissionsAndroid.requestMultiple(permissions);
         }
@@ -64,6 +61,11 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
         )
     }
 
+    const filterItem = (item: string) => {
+        if (!searchInput) return true;
+        return item.toLowerCase().includes(searchInput.toLowerCase());
+    }
+
     return (
         <View style={[styles.container, props.style]}>
             <Input
@@ -76,7 +78,7 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
                 leftIcon={{ name: 'magnify' }}
             />
             <FlatList
-                data={data || []}
+                data={data?.filter(filterItem) || []}
                 renderItem={renderItem}
                 style={styles.flatList}
                 keyExtractor={(item, i) => `${i}`}
@@ -115,7 +117,7 @@ const EditBlueprintItem = React.memo<listPropTypes>(({ name, style }) => {
     const styles = useStyles();
 
     const onEditBlueprint = async () => {
-        navigate("Edit", { name });
+        navigate("Edit", { name, type: EditType.Blueprint });
     }
 
     return (
