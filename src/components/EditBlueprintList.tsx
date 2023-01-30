@@ -1,17 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, FlatList, ListRenderItem, RefreshControl, ActivityIndicator, Text, StyleProp, ViewStyle, TouchableOpacity } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Input from './Input';
 import { SFS_GAMING_BPS } from '../constants/value';
-import { RootState } from '../store/types';
+import { AppThunkDispatch, RootState } from '../store/types';
 import SkeletonSearch from './skeletons/SkeletonSearch';
-import { EditType, IconTypes } from '../constants/enums';
+import { EditType, IconTypes, ToastTypes } from '../constants/enums';
 import Icon from './Icon';
 import { navigate } from '../helper/navigator';
 import RNFS from 'react-native-fs'
 import { getBlueprintDirPath } from '../helper/utility';
 import { PermissionsAndroid, Platform } from 'react-native';
+// import { NativeModules } from 'react-native';
+// import { setToast } from '../store/actions/app';
+// const PermissionFile = NativeModules.PermissionFile;
 
 type propTypes = {
     style?: StyleProp<any>,
@@ -21,9 +24,47 @@ const EditBlueprintList = React.memo<propTypes>((props) => {
     const styles = useStyles();
     const [searchInput, setSearchText] = useState<string>("");
     const theme = useSelector((store: RootState) => store.theme);
+    // const dispatch = useDispatch<AppThunkDispatch>();
 
     useEffect(() => {
         if (Platform.OS == 'android') {
+            // if (Platform.Version >= 30) {
+            //     console.log("OS is 30+")
+            //     PermissionFile.checkAndGrantPermission(
+            //         (err) => {
+            //             console.log(err);
+            //             dispatch(setToast({
+            //                 title: "Permission denied",
+            //                 text: "No permission has been granted",
+            //                 type: ToastTypes.error,
+            //             }))
+            //         },
+            //         (res: any) => {
+            //             if (res) {
+            //                 console.log(res);
+            //             }
+            //         },
+            //     );
+            // } else {
+            //     PermissionsAndroid.request(
+            //         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            //         // (isAllow) => {
+            //         //     if (isAllow) {
+            //         //         dispatch(setToast({
+            //         //             title: "Permission Allowed",
+            //         //             text: "permission has been granted",
+            //         //             type: ToastTypes.success,
+            //         //         }))
+            //         //     } else {
+            //         //         dispatch(setToast({
+            //         //             title: "Sorry",
+            //         //             text: "Access not granted",
+            //         //             type: ToastTypes.error,
+            //         //         }))
+            //         //     }
+            //         // },
+            //     );
+            // }
             const permissions = [
                 PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
                 PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
